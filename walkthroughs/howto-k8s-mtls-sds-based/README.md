@@ -372,7 +372,7 @@ It should output the certs that Envoy currently has and we should see both the a
      "serial_number": "7b177c736290d0fe5527a7ccf0ecee4c",
      "subject_alt_names": [
       {
-       "uri": "spiffe://howto-k8s-mtls-sds-based.com/ns/howto-k8s-mtls-sds-based/sa/default/front"
+       "uri": "spiffe://howto-k8s-mtls-sds-based.com/front"
       }
      ],
      "days_until_expiration": "0",
@@ -385,7 +385,7 @@ It should output the certs that Envoy currently has and we should see both the a
 }
 ```
 
-We also have health checks enabled for all the Virtualnodes, so we should be able to check if envoy health check is working as expected with mTLS enabled between the individual envoys. We should also see a successful TLS handshake between `front` and the backend VirtualNode envoys (`blue`, `red` and `green`). Since, we didn't register an entry for `green` service with the SPIRE Server, it will not be able to issues an SVID for it. So, we should see a failed health check for `green` and healthy clusters for `red` and `green` backends.
+We also have health checks enabled for all the Virtualnodes, so we should be able to check if envoy health check is working as expected with mTLS enabled between the individual envoys. We should also see a successful TLS handshake between `front` and the backend VirtualNode envoys (`blue`, `red` and `green`). Since, we didn't register an entry for `green` service with the SPIRE Server, it will not be able to issue an SVID for it. So, we should see a failed health check for `green` and healthy clusters for `red` and `green` backends.
 
 ```bash
 kubectl exec -it $FRONT_POD -n howto-k8s-mtls-sds-based -c envoy -- curl http://localhost:9901/clusters | grep -E '((blue|green|red).*health)'
