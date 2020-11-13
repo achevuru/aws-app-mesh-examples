@@ -71,7 +71,7 @@ If you prefer to instead work with an existing SPIRE installation, you would nee
 
 ## Step 3: Register Node and Workload entries with SPIRE Server
 
-Once we have SPIRE Server and Agent(s) up and running, we need to register Node and Workload entries with SPIRE Server. SPIRE Server will share the list of all the registered entries with individual SPIRE agents. SPIRE Agents will cache these entries locally. When a Workload/Pod reaches out to the local SPIRE Agent via the Workload API that it exposes, SPIRE Agent will collect info about that pod and compares it against the registered entries to determine the SVID they need to issue for this particular pod. So, for example a K8S Pod running in namespace 'howto-k8s-mtls-sds-based' with 'default' ServiceAccount and with a pod label 'app:front' will receive  "spiffe://howto-k8s-mtls-sds-based.com/ns/howto-k8s-mtls-sds-based/sa/default/front" as SPIFFE ID. If it doesn't find a match with any of the registered entries then it will not issue an SVID for that workload/pod. We set a default TTL value of "3600" in this walk through, so the certs are automatically renewed every 1 hr. If you wish to change this, you can modify "default_svid_ttl" value in SPIRE Server's ConfigMap.
+Once we have SPIRE Server and Agent(s) up and running, we need to register Node and Workload entries with SPIRE Server. SPIRE Server will share the list of all the registered entries with individual SPIRE agents. SPIRE Agents will cache these entries locally. When a Workload/Pod reaches out to the local SPIRE Agent via the Workload API that it exposes, SPIRE Agent will collect info about that pod and compares it against the registered entries to determine the SVID they need to issue for this particular pod.
 
 Please refer to https://spiffe.io/docs/latest/spire/using/registering/ for more details
 
@@ -125,7 +125,8 @@ Selector      : k8s_sat:agent_sa:spire-agent
 Selector      : k8s_sat:cluster:demo-cluster
 
 ```
-As we can see from the output above, we didn't register an entry to match on the `green` app. We will use this to illustrate how SPIRE vends out identities as well as to show how mTLS communication fails between `front` and `green` without valid certs on both ends.
+
+So, for example a K8S Pod running in namespace 'howto-k8s-mtls-sds-based' with 'default' ServiceAccount and with a pod label 'app:front' will receive  "spiffe://howto-k8s-mtls-sds-based.com/front" as SPIFFE ID. If it doesn't find a match with any of the registered entries then it will not issue an SVID for that workload/pod. We set a default TTL value of "3600" in this walk through, so the certs are automatically renewed every 1 hr. If you wish to change this, you can modify "default_svid_ttl" value in SPIRE Server's ConfigMap. Also, as we can see from the output above, we didn't register an entry to match on the `green` app. We will use this to illustrate how SPIRE vends out identities as well as to show how mTLS communication fails between `front` and `green` without valid certs on both ends.
                                                                                                                                        
 ## Step 4: Create a Mesh with mTLS enabled
 
