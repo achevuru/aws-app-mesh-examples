@@ -1,7 +1,9 @@
 ## Overview
-In this walk through, we'll enable mTLS between two applications in App Mesh using Envoy's Secret Discovery Service(SDS). SDS allows envoy to fecth certificates from a remote SDS Server. When SDS is enabled and configured in Envoy, it will fetch the certificates from a central SDS server. SDS server will automatically renew the certs when they are about to expire and will push them to respective envoys. This greatly simplifies the certificate management process for individual services/apps and is more secure when compared to file based certs as the certs are no longer stored on the disk. If the envoy fails to fetch a certificate from the SDS server for any reason, the listener will be marked as active and the port will be open but the connection to the port will be reset. Please refer to https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret for more details on Envoy's Secret Discovery Service.
+In this walk through, we'll enable mTLS between two applications in App Mesh using Envoy's Secret Discovery Service(SDS). SDS allows envoy to fetch certificates from a remote SDS Server. When SDS is enabled and configured in Envoy, it will fetch the certificates from a central SDS server. SDS server will automatically renew the certs when they are about to expire and will push them to respective envoys. This greatly simplifies the certificate management process for individual services/apps and is more secure when compared to file based certs as the certs are no longer stored on the disk. If the envoy fails to fetch a certificate from the SDS server for any reason, the listener will be marked as active and the port will be open but the connection to the port will be reset. 
 
-SPIRE will be used as SDS provider in this walk through. SPIRE is an Identity Management platform which at its heart is a tool chain that automatically issues and rotates authorized SVIDs (SPIFFE Verifiable Identity Document). A SPIRE Agent will run on each of the nodes on the cluster and will expose a Workload API via a Unix Domain Socket. All the envoys on a particular node will reach out to the local SPIRE Agent over UDS. Please refer to https://spiffe.io/docs/latest/spire/understand/ for more details.
+Please refer to https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret for more details on Envoy's Secret Discovery Service.
+
+SPIRE will be used as SDS provider in this walk through and will be the only SDS provider option supported in the Preview release. SPIRE is an Identity Management platform which at its heart is a tool chain that automatically issues and rotates authorized SVIDs (SPIFFE Verifiable Identity Document). A SPIRE Agent will run on each of the nodes on the cluster and will expose a Workload API via a Unix Domain Socket. All the envoys on a particular node will reach out to the local SPIRE Agent over UDS. Please refer to https://spiffe.io/docs/latest/spire/understand/ for more details.
 
 In App Mesh, traffic encryption works between Virtual Nodes, and thus between Envoys in your service mesh. This means your application code is not responsible for negotiating a TLS-encrypted session, instead allowing the local proxy(envoy) to negotiate and terminate TLS on your application's behalf. We will be configuring an SDS cluster in Envoy to obtain certificates from the SDS provider (i.e.,) SPIRE.
 
@@ -18,9 +20,11 @@ v1.2.0-preview
 ```
 3. [Setup](https://docs.aws.amazon.com/app-mesh/latest/userguide/preview.html) AWS CLI to use preview channel
 ```
+curl https://raw.githubusercontent.com/aws/aws-app-mesh-roadmap/master/appmesh-preview/service-model.json \
+        -o $HOME/appmesh-preview-model.json
 aws configure add-model \
     --service-name appmesh-preview \
-    --service-model https://raw.githubusercontent.com/aws/aws-app-mesh-roadmap/master/appmesh-preview/service-model.json
+    --service-model file://$HOME/appmesh-preview-model.json
 ```
 
 4. Install Docker. `deploy.sh` script builds the demo application images using Docker CLI.
