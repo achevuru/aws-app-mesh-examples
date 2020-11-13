@@ -17,12 +17,6 @@ if [ -z $ENVOY_IMAGE ]; then
     exit 1
 fi
 
-action="$1"
-if [ -z "$action" ]; then
-    echo "Usage:"
-    echo "mesh.sh [up|addGreen|removeGreen]"
-fi
-
 SVID_CA_TRUST_DOMAIN=spiffe://howto-k8s-mtls-sds-based.com
 FRONTEND_APP_SVID=spiffe://howto-k8s-mtls-sds-based.com/front
 COLORAPP_BLUE_SVID=spiffe://howto-k8s-mtls-sds-based.com/colorblue
