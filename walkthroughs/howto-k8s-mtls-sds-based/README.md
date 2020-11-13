@@ -1,7 +1,9 @@
 ## Overview
-In this walk through, we'll enable mTLS between two applications in App Mesh using Envoy's SDS. SPIRE will be used as SDS provider in this walkthrough.
+In this walk through, we'll enable mTLS between two applications in App Mesh using Envoy's Secret Discovery Service(SDS). SDS allows envoy to fecth certificates from a remote SDS Server. When SDS is enabled and configured in Envoy, it will fetch the certificates from a central SDS server. SDS server will automatically renew the certs when they are about to expire and will push them to respective envoys. This greatly simplifies the certificate management process for individual services/apps and is more secure when compared to file based certs as the certs are no longer stored on the disk. If the envoy fails to fetch a certificate from the SDS server for any reason, the listener will be marked as active and the port will be open but the connection to the port will be reset. Please refer to https://www.envoyproxy.io/docs/envoy/latest/configuration/security/secret for more details on Envoy's Secret Discovery Service.
 
-In App Mesh, traffic encryption works between Virtual Nodes, and thus between Envoys in your service mesh. This means your application code is not responsible for negotiating a TLS-encrypted session, instead allowing the local proxy to negotiate and terminate TLS on your application's behalf. We will be configuring an SDS cluster in Envoy to obtain certificates from the SDS provider (i.e.,) SPIRE.
+SPIRE will be used as SDS provider in this walk through. SPIRE is an Identity Management platform which at its heart is a tool chain that automatically issues and rotates authorized SVIDs (SPIFFE Verifiable Identity Document). A SPIRE Agent will run on each of the nodes on the cluster and will expose a Workload API via a Unix Domain Socket. All the envoys on a particular node will reach out to the local SPIRE Agent over UDS. Please refer to https://spiffe.io/docs/latest/spire/understand/ for more details.
+
+In App Mesh, traffic encryption works between Virtual Nodes, and thus between Envoys in your service mesh. This means your application code is not responsible for negotiating a TLS-encrypted session, instead allowing the local proxy(envoy) to negotiate and terminate TLS on your application's behalf. We will be configuring an SDS cluster in Envoy to obtain certificates from the SDS provider (i.e.,) SPIRE.
 
 ## Prerequisites
 
@@ -40,9 +42,7 @@ aws configure add-model \
 
 ## Step 2: SPIRE Installation
 
-SPIRE is an Identity Management platform which at its heart is a tool chain that automatically issues and rotates authorized SVIDs (SPIFFE Verifiable Identity Document). Please refer to https://spiffe.io/docs/latest/spire/understand/ for more details.
-
-**Option 1:** Quick setup
+**Option 1: Quick setup**
 
 Walk through provides a quick and simple way to install and configure both SPIRE Server and Agent. If you don't have SPIRE Server and Agent(s) already running on your cluster, you can execute the below SPIRE installation script. It will install and configure SPIRE Server and Agent(s) with the trust domain of this walkthrough (howto-k8s-mtls-sds-based.com). SPIRE Server will be installed as a Stateful set and SPIRE Agent will be installed as a Daemonset (under namespace `spire`). SPIRE Agent is configured with a 'trust_bundle_path' pointing to SPIRE Server's CA bundle.
 
@@ -65,7 +65,7 @@ pod/spire-server-0      1/1     Running   0          7m38s
 
 ```
 
-**Option 2:** Working with existing SPIRE installation on your cluster.
+**Option 2: Working with existing SPIRE installation on your cluster**
 
 If you prefer to instead work with an existing SPIRE installation, you would need to modify the trust domain that is configured on your cluster to the one used by this walkthrough (howto-k8s-mtls-sds-based.com). Update the 'trust_domain' field in your SPIRE Server and Agent configs (kubectl edit - server/agent configmaps) and apply the changes. Also, update the "server_address", "server_port" and "trust_bundle_path" in the Server/Agent ConfigMaps to match with your environment.
 
@@ -148,44 +148,6 @@ Verify all the resources are up and running.
 
 ```bash
 kubectl get all -n howto-k8s-mtls-sds-based
-
-NAME                         READY   STATUS    RESTARTS   AGE
-pod/blue-5ff858765d-rd4rx    2/2     Running   0          2m
-pod/front-5f8757d4c-6nmj9    2/2     Running   0          2m
-pod/green-7d6c78dfd8-tqrqz   2/2     Running   0          2m
-pod/red-64c8887c8d-ccnr4     2/2     Running   0          2m
-
-NAME                  TYPE        CLUSTER-IP       EXTERNAL-IP   PORT(S)    AGE
-service/color         ClusterIP   10.100.158.92    <none>        8080/TCP   2m
-service/color-blue    ClusterIP   10.100.65.11     <none>        8080/TCP   2m
-service/color-green   ClusterIP   10.100.91.203    <none>        8080/TCP   2m
-service/color-red     ClusterIP   10.100.130.238   <none>        8080/TCP   2m
-service/front         ClusterIP   10.100.56.110    <none>        8080/TCP   2m
-
-NAME                    READY   UP-TO-DATE   AVAILABLE   AGE
-deployment.apps/blue    1/1     1            1           2m
-deployment.apps/front   1/1     1            1           2m
-deployment.apps/green   1/1     1            1           2m
-deployment.apps/red     1/1     1            1           2m
-
-NAME                               DESIRED   CURRENT   READY   AGE
-replicaset.apps/blue-5ff858765d    1         1         1       2m
-replicaset.apps/front-5f8757d4c    1         1         1       2m
-replicaset.apps/green-7d6c78dfd8   1         1         1       2m
-replicaset.apps/red-64c8887c8d     1         1         1       2m
-
-NAME                                  ARN                                                                                                                         AGE
-virtualrouter.appmesh.k8s.aws/color   arn:aws:appmesh-preview:us-west-2:1111111111:mesh/howto-k8s-mtls-sds-based/virtualRouter/color_howto-k8s-mtls-sds-based   2m
-
-NAME                                   ARN                                                                                                                                            AGE
-virtualservice.appmesh.k8s.aws/color   arn:aws:appmesh-preview:us-west-2:1111111111:mesh/howto-k8s-mtls-sds-based/virtualService/color.howto-k8s-mtls-sds-based.svc.cluster.local   2m
-
-NAME                                ARN                                                                                                                       AGE
-virtualnode.appmesh.k8s.aws/blue    arn:aws:appmesh-preview:us-west-2:1111111111:mesh/howto-k8s-mtls-sds-based/virtualNode/blue_howto-k8s-mtls-sds-based    2m
-virtualnode.appmesh.k8s.aws/front   arn:aws:appmesh-preview:us-west-2:1111111111:mesh/howto-k8s-mtls-sds-based/virtualNode/front_howto-k8s-mtls-sds-based   2m
-virtualnode.appmesh.k8s.aws/green   arn:aws:appmesh-preview:us-west-2:1111111111:mesh/howto-k8s-mtls-sds-based/virtualNode/green_howto-k8s-mtls-sds-based   2m
-virtualnode.appmesh.k8s.aws/red     arn:aws:appmesh-preview:us-west-2:1111111111:mesh/howto-k8s-mtls-sds-based/virtualNode/red_howto-k8s-mtls-sds-based     2m
-f8ffc2502142:envoy-x509 achevuru$ kubectl get all -n howto-k8s-mtls-sds-based
 NAME                         READY   STATUS    RESTARTS   AGE
 pod/blue-5ff858765d-rd4rx    2/2     Running   0          2m
 pod/front-5f8757d4c-6nmj9    2/2     Running   0          2m
