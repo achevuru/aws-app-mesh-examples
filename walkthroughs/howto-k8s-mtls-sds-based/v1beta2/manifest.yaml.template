@@ -266,6 +266,8 @@ spec:
       app: front
   template:
     metadata:
+      annotations:
+        appmesh.k8s.aws/enableSDS: "true"
       labels:
         app: front
     spec:
@@ -304,6 +306,8 @@ spec:
       version: green
   template:
     metadata:
+      annotations:
+        appmesh.k8s.aws/enableSDS: "true"
       labels:
         app: color
         version: green
@@ -343,6 +347,8 @@ spec:
       version: blue
   template:
     metadata:
+      annotations:
+        appmesh.k8s.aws/enableSDS: "true"
       labels:
         app: color
         version: blue
@@ -382,6 +388,8 @@ spec:
       version: red
   template:
     metadata:
+      annotations:
+        appmesh.k8s.aws/enableSDS: "true"
       labels:
         app: color
         version: red
