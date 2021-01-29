@@ -57,6 +57,7 @@ Walk through uses built-in k8s node attestor([k8s_sat](https://github.com/spiffe
 ```bash
 ./deploy_spire.sh
 ```
+**Note:** You can also install sample SPIRE Server and Agent via helm. Please refer to [SPIRE Server](https://github.com/aws/eks-charts/tree/master/stable/appmesh-spire-server) and [SPIRE Agent](https://github.com/aws/eks-charts/tree/master/stable/appmesh-spire-agent) charts in EKS charts repository for instructions on how to install them.
 
 Let's check if both SPIRE Server and Agent are up and running. You should see a SPIRE Agent up and running on every node on your cluster.
 
